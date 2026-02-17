@@ -1,55 +1,63 @@
 const mongoose = require('mongoose');
 
 const certificateSchema = new mongoose.Schema({
-    certificateId: {
-        type: String,
-        required: [true, 'Certificate ID is required'],
+    certificateId: { 
+        type: String, 
+        required: true, 
         unique: true,
         uppercase: true,
         trim: true
     },
-    studentName: {
-        type: String,
-        required: [true, 'Student name is required'],
+    studentName: { 
+        type: String, 
+        required: true,
         trim: true
     },
-    email: {
-        type: String,
+    studentEmail: { 
+        type: String, 
+        required: true,
         lowercase: true,
         trim: true
     },
-    domainName: {
-        type: String,
-        required: [true, 'Domain name is required'],
+    domain: { 
+        type: String, 
+        required: true,
         trim: true
     },
-    startDate: {
-        type: Date,
-        required: [true, 'Start date is required']
+    startDate: { 
+        type: Date, 
+        required: true 
     },
-    endDate: {
-        type: Date,
-        required: [true, 'End date is required']
+    endDate: { 
+        type: Date, 
+        required: true 
     },
-    issueDate: {
+    status: {
+        type: String,
+        enum: ['active', 'revoked'],
+        default: 'active'
+    },
+    emailSent: {
+        type: Boolean,
+        default: false
+    },
+    emailSentAt: {
+        type: Date
+    },
+    createdAt: { 
+        type: Date, 
+        default: Date.now 
+    },
+    updatedAt: {
         type: Date,
         default: Date.now
-    },
-    isVerified: {
-        type: Boolean,
-        default: true
-    },
-    uploadedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
     }
-}, {
-    timestamps: true
 });
 
-// Index for faster searches
-certificateSchema.index({ certificateId: 1 });
-certificateSchema.index({ studentName: 'text' });
+// Update timestamp on save
+certificateSchema.pre('save', function(next) {
+    this.updatedAt = Date.now();
+    next();
+});
 
 module.exports = mongoose.model('Certificate', certificateSchema);
