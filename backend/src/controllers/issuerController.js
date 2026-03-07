@@ -3,8 +3,8 @@ const Certificate = require('../models/Certificate');
 const User = require('../models/User');
 
 // @desc    Upload certificates via Excel
-// @route   POST /api/admin/upload
-// @access  Private/Admin
+// @route   POST /api/issuer/upload
+// @access  Private/Issuer
 const uploadCertificates = async (req, res) => {
     try {
         if (!req.file) {
@@ -28,7 +28,7 @@ const uploadCertificates = async (req, res) => {
             
             // Validate required fields
             if (!row.certificateId || !row.studentName || !row.internshipDomain || 
-                !row.startDate || !row.endDate) {
+                !row.startDate || !row.endDate || !row.email) {
                 errors.push(`Row ${i + 2}: Missing required fields`);
                 continue;
             }
@@ -56,8 +56,8 @@ const uploadCertificates = async (req, res) => {
             certificates.push({
                 certificateId: row.certificateId.toString().toUpperCase(),
                 studentName: row.studentName.trim(),
-                email: row.email ? row.email.trim().toLowerCase() : '',
-                internshipDomain: row.internshipDomain.trim(),
+                studentEmail: row.email ? row.email.trim().toLowerCase() : '',
+                domain: row.internshipDomain.trim(),
                 startDate,
                 endDate,
                 uploadedBy: req.user._id
@@ -101,16 +101,16 @@ const parseExcelDate = (excelDate) => {
 };
 
 // @desc    Get all certificates
-// @route   GET /api/admin/certificates
-// @access  Private/Admin
+// @route   GET /api/issuer/certificates
+// @access  Private/Issuer
 const getAllCertificates = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
         
-        const total = await Certificate.countDocuments();
-        const certificates = await Certificate.find()
+        const total = await Certificate.countDocuments({ uploadedBy: req.user._id });
+        const certificates = await Certificate.find({ uploadedBy: req.user._id })
             .populate('uploadedBy', 'name email')
             .sort({ createdAt: -1 })
             .skip(skip)
@@ -133,11 +133,11 @@ const getAllCertificates = async (req, res) => {
 };
 
 // @desc    Delete certificate
-// @route   DELETE /api/admin/certificates/:id
-// @access  Private/Admin
+// @route   DELETE /api/issuer/certificates/:id
+// @access  Private/Issuer
 const deleteCertificate = async (req, res) => {
     try {
-        const certificate = await Certificate.findById(req.params.id);
+        const certificate = await Certificate.findOne({ _id: req.params.id, uploadedBy: req.user._id });
         
         if (!certificate) {
             return res.status(404).json({ success: false, message: 'Certificate not found' });
@@ -155,33 +155,34 @@ const deleteCertificate = async (req, res) => {
 };
 
 // @desc    Get dashboard stats
-// @route   GET /api/admin/stats
-// @access  Private/Admin
+// @route   GET /api/issuer/stats
+// @access  Private/Issuer
 const getDashboardStats = async (req, res) => {
     try {
-        const totalCertificates = await Certificate.countDocuments();
-        const totalUsers = await User.countDocuments({ role: 'user' });
-        const totalAdmins = await User.countDocuments({ role: 'admin' });
+        const totalCertificates = await Certificate.countDocuments({ uploadedBy: req.user._id });
+        const downloadedCertificates = 0; // Placeholder as we don't track downloads yet
+        const revokedCertificates = await Certificate.countDocuments({ uploadedBy: req.user._id, status: 'revoked' });
         
         // Get certificates by domain
         const certificatesByDomain = await Certificate.aggregate([
+            { $match: { uploadedBy: req.user._id } },
             { $group: { _id: '$internshipDomain', count: { $sum: 1 } } },
             { $sort: { count: -1 } },
             { $limit: 5 }
         ]);
         
         // Recent certificates
-        const recentCertificates = await Certificate.find()
+        const recentCertificates = await Certificate.find({ uploadedBy: req.user._id })
             .sort({ createdAt: -1 })
             .limit(5)
-            .select('certificateId studentName internshipDomain createdAt');
+            .select('certificateId studentName internshipDomain createdAt status');
         
         res.json({
             success: true,
             data: {
                 totalCertificates,
-                totalUsers,
-                totalAdmins,
+                downloadedCertificates,
+                revokedCertificates,
                 certificatesByDomain,
                 recentCertificates
             }
@@ -206,8 +207,39 @@ const getAllUsers = async (req, res) => {
     }
 };
 
+// @desc    Issue single certificate
+// @route   POST /api/issuer/issue
+// @access  Private/Issuer
+const issueCertificate = async (req, res) => {
+    try {
+        const { studentName, studentEmail, domain, courseName } = req.body; // courseName can be mapped to domain or stored if schema allows
+
+        // Generate ID
+        const certificateId = 'CERT-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+        
+        const certificate = await Certificate.create({
+            certificateId,
+            studentName,
+            studentEmail,
+            domain: domain || courseName, // Fallback if frontend sends courseName
+            startDate: new Date(),
+            endDate: new Date(), // Just defaults for now if not provided
+            uploadedBy: req.user._id
+        });
+
+        res.status(201).json({
+            success: true,
+            message: 'Certificate issued successfully',
+            data: certificate
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 module.exports = {
     uploadCertificates,
+    issueCertificate,
     getAllCertificates,
     deleteCertificate,
     getDashboardStats,

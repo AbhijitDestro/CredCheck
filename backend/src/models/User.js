@@ -22,27 +22,18 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['user', 'admin'],
-        default: 'user'
+        enum: ['student', 'issuer'],
+        default: 'student'
     },
     createdAt: {
         type: Date,
         default: Date.now
-    }
+    },
+    certificates: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Certificate'
+    }]
 });
 
-// Hash password before saving
-userSchema.pre('save', async function(next) {
-    if (!this.isModified('password')) {
-        next();
-    }
-    const salt = await bcrypt.genSalt(12);
-    this.password = await bcrypt.hash(this.password, salt);
-});
-
-// Compare password method
-userSchema.methods.matchPassword = async function(enteredPassword) {
-    return await bcrypt.compare(enteredPassword, this.password);
-};
 
 module.exports = mongoose.model('User', userSchema);

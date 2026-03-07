@@ -81,16 +81,36 @@ const verifyCertificate = async (req, res) => {
             return res.json({
                 success: true,
                 verified: false,
+                status: 'not-found',
                 message: 'Certificate not found in our records'
+            });
+        }
+
+        if (certificate.status === 'revoked') {
+            return res.json({
+                success: true,
+                verified: false,
+                status: 'revoked',
+                message: 'This certificate has been revoked by the issuer.'
             });
         }
         
         // Optional: Verify student name matches
         const nameMatches = certificate.studentName.toLowerCase() === studentName.toLowerCase();
         
+        if (!nameMatches) {
+             return res.json({
+                success: true,
+                verified: false,
+                status: 'name-mismatch',
+                message: 'Certificate found but student name does not match.'
+            });
+        }
+        
         res.json({
             success: true,
             verified: true,
+            status: 'valid',
             nameMatches,
             data: {
                 certificateId: certificate.certificateId,
@@ -98,8 +118,27 @@ const verifyCertificate = async (req, res) => {
                 internshipDomain: certificate.internshipDomain,
                 startDate: certificate.startDate,
                 endDate: certificate.endDate,
+                issueDate: certificate.issueDate,
                 isVerified: certificate.isVerified
             }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// @desc    Get my certificates (Student)
+// @route   GET /api/certificates/my-certificates
+// @access  Private
+const getMyCertificates = async (req, res) => {
+    try {
+        const certificates = await Certificate.find({ 
+            studentEmail: req.user.email 
+        }).sort({ createdAt: -1 });
+        
+        res.json({
+            success: true,
+            data: certificates
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -109,5 +148,6 @@ const verifyCertificate = async (req, res) => {
 module.exports = {
     searchCertificate,
     downloadCertificate,
-    verifyCertificate
+    verifyCertificate,
+    getMyCertificates
 };

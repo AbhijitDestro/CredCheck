@@ -4,20 +4,22 @@
 
 :root {
   font-family: "Bricolage Grotesque", sans-serif;
-  background-color: #222;
-  color: #fff;
+  background-color: #fff;
+  color: #000;
 }
 
 /* Marquee Animation for Testimonials */
 .marquee {
   overflow: hidden;
-  white-space: nowrap;
   position: relative;
+  width: 100%;
+  padding: 20px 0;
 }
 
 .marquee-content {
   display: inline-flex;
   animation: marquee 30s linear infinite;
+  white-space: nowrap;
 }
 
 .marquee-content:hover {
@@ -26,9 +28,58 @@
 
 @keyframes marquee {
   0% {
-    transform: translate3d(0, 0, 0);
+    transform: translateX(0);
   }
   100% {
-    transform: translate3d(-50%, 0, 0);
+    transform: translateX(-50%);
   }
+}
+
+/* Duplicate marquee content to ensure smooth looping */
+.marquee .marquee-content.duplicate {
+  animation: marquee 30s linear infinite;
+  animation-delay: -15s;
+}
+
+/* Alternative testimonial layout for mobile responsiveness */
+@media (max-width: 768px) {
+  .marquee {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .marquee::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .marquee-content {
+    display: flex;
+    white-space: nowrap;
+    animation: marquee-mobile 20s linear infinite;
+  }
+  
+  @keyframes marquee-mobile {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+}
+
+/* Color Variables based on Logo Colors */
+:root {
+  --primary-red: #f53924;
+  --secondary-red: #923830;
+  --accent-red: #d9534f;
+  --dark-red: #7a2823;
+  --light-red: #f9a8a3;
+  --primary-bg: #ffffff;
+  --text-dark: #000000;
+  --text-light: #ffffff;
+  --gray-bg: #f8f9fa;
+  --border-gray: #e9ecef;
 }

@@ -36,19 +36,21 @@ export const authAPI = {
     login: (credentials) => api.post('/auth/login', credentials),
     register: (userData) => api.post('/auth/register', userData),
     getMe: () => api.get('/auth/me'),
+    updateProfile: (userData) => api.put('/auth/update', userData),
     createAdmin: (adminData) => api.post('/auth/create-admin', adminData)
 };
 
-// Admin APIs
-export const adminAPI = {
-    uploadCertificates: (formData) => api.post('/admin/upload', formData, {
+// Issuer APIs
+export const issuerAPI = {
+    uploadCertificates: (formData) => api.post('/issuer/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
     }),
+    issueCertificate: (data) => api.post('/issuer/issue', data),
     getAllCertificates: (page = 1, limit = 10) => 
-        api.get(`/admin/certificates?page=${page}&limit=${limit}`),
-    deleteCertificate: (id) => api.delete(`/admin/certificates/${id}`),
-    getStats: () => api.get('/admin/stats'),
-    getAllUsers: () => api.get('/admin/users')
+        api.get(`/issuer/certificates?page=${page}&limit=${limit}`),
+    deleteCertificate: (id) => api.delete(`/issuer/certificates/${id}`),
+    getStats: () => api.get('/issuer/stats'),
+    getAllUsers: () => api.get('/issuer/users')
 };
 
 // Certificate APIs
@@ -57,7 +59,8 @@ export const certificateAPI = {
     download: (certificateId) => api.get(`/certificates/download/${certificateId}`, {
         responseType: 'blob'
     }),
-    verify: (data) => api.post('/certificates/verify', data)
+    verify: (data) => api.post('/certificates/verify', data),
+    getMyCertificates: () => api.get('/certificates/my-certificates')
 };
 
 export default api;

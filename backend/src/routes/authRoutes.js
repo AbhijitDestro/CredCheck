@@ -1,13 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
-const { registerUser, loginUser, getMe, createAdmin } = require('../controllers/authController');
-const { protect, adminOnly } = require('../middleware/authMiddleware');
+const { registerUser, loginUser, getProfile, updateProfile } = require('../controllers/authController');
+const { protect } = require('../middleware/authMiddleware');
 
 router.post('/register', [
     body('name').trim().notEmpty().withMessage('Name is required'),
     body('email').isEmail().withMessage('Please provide a valid email'),
-    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
+    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+    body('role').isIn(['student', 'issuer']).withMessage('Role must be either student or issuer')
 ], registerUser);
 
 router.post('/login', [
@@ -15,12 +16,7 @@ router.post('/login', [
     body('password').notEmpty().withMessage('Password is required')
 ], loginUser);
 
-router.get('/me', protect, getMe);
-
-router.post('/create-admin', protect, adminOnly, [
-    body('name').trim().notEmpty().withMessage('Name is required'),
-    body('email').isEmail().withMessage('Please provide a valid email'),
-    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
-], createAdmin);
+router.get('/me', protect, getProfile);
+router.put('/update', protect, updateProfile);
 
 module.exports = router;

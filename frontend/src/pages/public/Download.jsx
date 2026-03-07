@@ -1,5 +1,8 @@
 import React, { useState } from 'react'
-import { Download, FileText, Award, Calendar, User, Search, Loader } from 'lucide-react'
+import { Download, FileText, Award, Calendar, User, Search, Loader, FileCheck, ArrowRight } from 'lucide-react'
+import Navbar from '../../components/public/Navbar'
+import Footer from '../../components/public/Footer'
+import { motion as Motion, AnimatePresence } from 'framer-motion'
 
 const CertificateDownload = () => {
   const [studentId, setStudentId] = useState('')
@@ -57,130 +60,189 @@ const CertificateDownload = () => {
   }
 
   return (
-    <div className="min-h-screen py-16">
-      <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl lg:text-5xl font-bold text-white mb-4">
-              Download Certificates
+    <div className="min-h-screen bg-white font-sans selection:bg-red-100 selection:text-red-600">
+      <Navbar />
+      
+      <div className="relative pt-32 pb-20 px-4 min-h-screen flex flex-col justify-center overflow-hidden">
+        {/* Background Elements */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 right-0 w-[600px] h-[600px] bg-orange-100/40 rounded-full blur-[100px]"></div>
+          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-red-100/30 rounded-full blur-[100px]"></div>
+        </div>
+
+        <div className="container mx-auto max-w-5xl relative z-10">
+          <Motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-50 border border-orange-100 text-orange-600 font-medium text-sm mb-6">
+              <Download className="w-4 h-4" />
+              <span>Digital Downloads</span>
+            </div>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 tracking-tight mb-6">
+              Access Your <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-red-600">
+                Certificates
+              </span>
             </h1>
-            <p className="text-xl text-gray-300">
-              Search and download your verified certificates
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Securely access and download your verified academic credentials using your unique student identifier.
             </p>
-          </div>
+          </Motion.div>
 
-          {/* Search Form */}
-          <div className="bg-gray-800 rounded-lg p-8 mb-8">
-            <form onSubmit={handleSearch} className="space-y-6">
-              <div>
-                <label htmlFor="studentId" className="block text-white text-sm font-medium mb-2">
-                  Student ID
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    id="studentId"
-                    value={studentId}
-                    onChange={(e) => setStudentId(e.target.value)}
-                    placeholder="Enter your student ID (e.g., STU-2024-001)"
-                    className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg focus:ring-2 focus:ring-[#f53924] focus:border-transparent outline-none"
-                  />
-                  <Search className="absolute right-3 top-3 w-5 h-5 text-gray-400" />
+          {/* Search Section */}
+          <Motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="bg-white/80 backdrop-blur-xl border border-gray-100 rounded-3xl p-8 shadow-2xl shadow-gray-200/50 max-w-3xl mx-auto mb-16"
+          >
+            <form onSubmit={handleSearch}>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <User className="h-6 w-6 text-gray-400 group-focus-within:text-orange-500 transition-colors" />
                 </div>
-                {error && (
-                  <p className="text-red-400 text-sm mt-2">{error}</p>
-                )}
+                <input
+                  type="text"
+                  value={studentId}
+                  onChange={(e) => setStudentId(e.target.value)}
+                  placeholder="Enter Student ID (e.g., STU-2024-001)"
+                  className="w-full pl-14 pr-36 py-5 bg-gray-50/50 border border-gray-200 rounded-2xl text-lg text-gray-900 placeholder-gray-400 focus:ring-4 focus:ring-orange-100 focus:border-orange-500 focus:bg-white transition-all outline-none"
+                />
+                <Motion.button
+                  type="submit"
+                  disabled={isSearching || !studentId.trim()}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="absolute right-2 top-2 bottom-2 bg-gradient-to-r from-orange-600 to-red-600 text-white px-8 rounded-xl font-semibold shadow-lg shadow-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-orange-500/30 transition-all flex items-center gap-2"
+                >
+                  {isSearching ? (
+                    <>
+                      <Loader className="w-5 h-5 animate-spin" />
+                      <span className="hidden sm:inline">Searching...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Search className="w-5 h-5" />
+                      <span className="hidden sm:inline">Search</span>
+                    </>
+                  )}
+                </Motion.button>
               </div>
-              
-              <button
-                type="submit"
-                disabled={isSearching}
-                className="w-full bg-[#f53924] text-white py-3 rounded-lg font-semibold hover:bg-[#923830] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {isSearching ? (
-                  <>
-                    <Loader className="w-5 h-5 animate-spin" />
-                    Searching...
-                  </>
-                ) : (
-                  'Search Certificates'
-                )}
-              </button>
+              {error && (
+                <Motion.p
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-red-500 text-sm mt-3 ml-4"
+                >
+                  {error}
+                </Motion.p>
+              )}
             </form>
-          </div>
+          </Motion.div>
 
-          {/* Search Results */}
-          {searchResults && (
-            <div className="bg-gray-800 rounded-lg p-8">
-              <h2 className="text-2xl font-bold text-white mb-6">Your Certificates</h2>
-              
-              {searchResults.length === 0 ? (
-                <div className="text-center py-8">
-                  <FileText className="w-16 h-16 text-gray-500 mx-auto mb-4" />
-                  <p className="text-gray-400 text-lg">No certificates found for this student ID.</p>
-                  <p className="text-gray-500 text-sm mt-2">Please check your student ID and try again.</p>
+          {/* Results Section */}
+          <AnimatePresence mode="wait">
+            {searchResults && (
+              <Motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="max-w-4xl mx-auto"
+              >
+                <div className="flex items-center justify-between mb-8 px-4">
+                  <h2 className="text-2xl font-bold text-gray-900">Available Certificates</h2>
+                  <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm font-medium">
+                    {searchResults.length} Found
+                  </span>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  {searchResults.map((certificate) => (
-                    <div key={certificate.id} className="bg-gray-700 rounded-lg p-6 flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-[#f53924] rounded-full flex items-center justify-center">
-                          <Award className="w-6 h-6 text-white" />
-                        </div>
-                        <div>
-                          <h3 className="text-white font-semibold text-lg">{certificate.course}</h3>
-                          <div className="flex items-center gap-4 text-gray-300 text-sm mt-1">
-                            <div className="flex items-center gap-1">
-                              <User className="w-4 h-4" />
-                              <span>{certificate.studentName}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Calendar className="w-4 h-4" />
-                              <span>{certificate.issueDate}</span>
+                
+                {searchResults.length === 0 ? (
+                  <Motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="text-center py-16 bg-gray-50/50 rounded-3xl border border-gray-100"
+                  >
+                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <FileText className="w-10 h-10 text-gray-400" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">No Certificates Found</h3>
+                    <p className="text-gray-500">We couldn't find any certificates associated with this ID.</p>
+                  </Motion.div>
+                ) : (
+                  <div className="grid gap-6">
+                    {searchResults.map((certificate, index) => (
+                      <Motion.div
+                        key={certificate.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="group bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-orange-500/5 hover:border-orange-100 transition-all duration-300 relative overflow-hidden"
+                      >
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-50 to-transparent rounded-bl-[100px] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                        
+                        <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-6 md:gap-8">
+                          {/* Icon/Thumbnail */}
+                          <div className="flex-shrink-0">
+                            <div className="w-20 h-20 bg-gradient-to-br from-orange-100 to-red-50 rounded-2xl flex items-center justify-center border border-orange-100 group-hover:scale-110 transition-transform duration-300">
+                              <Award className="w-10 h-10 text-orange-600" />
                             </div>
                           </div>
-                          <p className="text-gray-400 text-sm mt-1">{certificate.institution}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="bg-green-900 text-green-300 px-3 py-1 rounded-full text-sm font-medium">
-                          {certificate.status}
-                        </span>
-                        <button
-                          onClick={() => handleDownload(certificate.id)}
-                          className="bg-[#f53924] text-white px-4 py-2 rounded-lg hover:bg-[#923830] transition-colors flex items-center gap-2"
-                        >
-                          <Download className="w-4 h-4" />
-                          Download
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
 
-          {/* Instructions */}
-          <div className="bg-gray-800 rounded-lg p-6 mt-8">
-            <h3 className="text-white text-lg font-semibold mb-4">How to Download Certificates</h3>
-            <ol className="text-gray-300 space-y-2 list-decimal list-inside">
-              <li>Enter your student ID in the search field above</li>
-              <li>Click "Search Certificates" to find your certificates</li>
-              <li>Review your available certificates in the results</li>
-              <li>Click the "Download" button next to any certificate</li>
-              <li>Your certificate will be downloaded as a PDF file</li>
-            </ol>
-            <div className="mt-4 p-4 bg-yellow-900 rounded-lg">
-              <p className="text-yellow-200 text-sm">
-                <strong>Note:</strong> Certificates are only available for download if they have been issued and verified by your institution.
-              </p>
-            </div>
-          </div>
+                          {/* Details */}
+                          <div className="flex-grow">
+                            <div className="flex flex-wrap gap-3 mb-3">
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold uppercase tracking-wider">
+                                <FileCheck className="w-3.5 h-3.5" />
+                                Verified
+                              </span>
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium">
+                                {certificate.id}
+                              </span>
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors">
+                              {certificate.course}
+                            </h3>
+                            <p className="text-gray-600 mb-4">{certificate.institution}</p>
+                            
+                            <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500">
+                              <div className="flex items-center gap-2">
+                                <User className="w-4 h-4" />
+                                <span>{certificate.studentName}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Calendar className="w-4 h-4" />
+                                <span>Issued: {certificate.issueDate}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Action */}
+                          <div className="flex-shrink-0 pt-4 md:pt-0 border-t md:border-t-0 border-gray-100 md:pl-8 md:border-l">
+                            <Motion.button
+                              onClick={() => handleDownload(certificate.id)}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              className="w-full md:w-auto bg-gray-900 text-white px-6 py-3 rounded-xl font-semibold hover:bg-orange-600 transition-colors flex items-center justify-center gap-2 group/btn"
+                            >
+                              <Download className="w-4 h-4" />
+                              <span>Download PDF</span>
+                              <ArrowRight className="w-4 h-4 opacity-0 -ml-2 group-hover/btn:opacity-100 group-hover/btn:ml-0 transition-all" />
+                            </Motion.button>
+                          </div>
+                        </div>
+                      </Motion.div>
+                    ))}
+                  </div>
+                )}
+              </Motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
+      <Footer />
     </div>
   )
 }

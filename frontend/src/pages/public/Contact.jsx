@@ -1,5 +1,8 @@
 import React, { useState } from 'react'
-import { Mail, Phone, MapPin, Send, User, MessageSquare } from 'lucide-react'
+import { Mail, Phone, MapPin, Send, User, MessageSquare, ArrowRight, HelpCircle } from 'lucide-react'
+import Navbar from '../../components/public/Navbar'
+import Footer from '../../components/public/Footer'
+import { motion as Motion, AnimatePresence } from 'framer-motion'
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -34,109 +37,160 @@ const Contact = () => {
     }, 2000)
   }
 
+  const contactInfo = [
+    {
+      icon: Mail,
+      title: 'Email Us',
+      details: ['support@credcheck.com', 'info@credcheck.com'],
+      color: 'bg-blue-50 text-blue-600'
+    },
+    {
+      icon: Phone,
+      title: 'Call Us',
+      details: ['+1 (555) 123-4567', 'Mon-Fri 9AM-6PM EST'],
+      color: 'bg-green-50 text-green-600'
+    },
+    {
+      icon: MapPin,
+      title: 'Visit Us',
+      details: ['123 Tech Street, Suite 456', 'New York, NY 10001'],
+      color: 'bg-purple-50 text-purple-600'
+    }
+  ]
+
   return (
-    <div className="min-h-screen">
-      <div className="container mx-auto px-4">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl lg:text-5xl font-bold text-white mb-4">
-              Contact Us
-            </h1>
-            <p className="text-xl text-gray-300">
-              Get in touch with our team for any questions or support
-            </p>
+    <div className="min-h-screen bg-white font-sans selection:bg-red-100 selection:text-red-600">
+      <Navbar />
+      
+      <div className="relative pt-32 pb-20 overflow-hidden">
+        {/* Background Elements */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-red-50/50 rounded-full blur-[100px] translate-x-1/3 -translate-y-1/4"></div>
+          <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-orange-50/50 rounded-full blur-[100px] -translate-x-1/4 translate-y-1/4"></div>
+        </div>
+
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-4xl mx-auto text-center mb-16">
+            <Motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <span className="inline-block py-1 px-3 rounded-full bg-red-50 text-red-600 text-sm font-semibold mb-6 border border-red-100">
+                Contact Support
+              </span>
+              <h1 className="text-5xl md:text-6xl font-bold text-gray-900 tracking-tight mb-6">
+                Get in <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-600">Touch</span>
+              </h1>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                Have questions about our verification process? Our team is here to help you 24/7.
+              </p>
+            </Motion.div>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-12">
+          <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
             {/* Contact Form */}
-            <div className="bg-gray-800 rounded-lg p-8">
-              <h2 className="text-2xl font-bold text-white mb-6">Send us a message</h2>
+            <Motion.div
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="bg-white rounded-3xl p-8 md:p-10 shadow-xl shadow-gray-200/50 border border-gray-100 relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-64 h-64 bg-red-50/50 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
               
-              {submitMessage && (
-                <div className="bg-green-900 text-green-200 p-4 rounded-lg mb-6">
-                  {submitMessage}
-                </div>
-              )}
+              <h2 className="text-2xl font-bold text-gray-900 mb-8 relative z-10">Send us a message</h2>
+              
+              <AnimatePresence>
+                {submitMessage && (
+                  <Motion.div
+                    initial={{ opacity: 0, height: 0, mb: 0 }}
+                    animate={{ opacity: 1, height: 'auto', mb: 24 }}
+                    exit={{ opacity: 0, height: 0, mb: 0 }}
+                    className="bg-emerald-50 text-emerald-700 p-4 rounded-xl text-sm font-medium border border-emerald-100 flex items-center gap-2 overflow-hidden"
+                  >
+                    <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                    {submitMessage}
+                  </Motion.div>
+                )}
+              </AnimatePresence>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <label htmlFor="name" className="block text-white text-sm font-medium mb-2">
-                    Full Name
-                  </label>
-                  <div className="relative">
+              <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label htmlFor="name" className="text-sm font-medium text-gray-700 ml-1">Full Name</label>
+                    <div className="relative group">
+                      <User className="absolute left-4 top-3.5 w-5 h-5 text-gray-400 group-focus-within:text-red-500 transition-colors" />
+                      <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        required
+                        placeholder="John Doe"
+                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-red-50 focus:border-red-500 focus:bg-white transition-all outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="email" className="text-sm font-medium text-gray-700 ml-1">Email Address</label>
+                    <div className="relative group">
+                      <Mail className="absolute left-4 top-3.5 w-5 h-5 text-gray-400 group-focus-within:text-red-500 transition-colors" />
+                      <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        required
+                        placeholder="john@example.com"
+                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-red-50 focus:border-red-500 focus:bg-white transition-all outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="subject" className="text-sm font-medium text-gray-700 ml-1">Subject</label>
+                  <div className="relative group">
+                    <HelpCircle className="absolute left-4 top-3.5 w-5 h-5 text-gray-400 group-focus-within:text-red-500 transition-colors" />
                     <input
                       type="text"
-                      id="name"
-                      name="name"
-                      value={formData.name}
+                      id="subject"
+                      name="subject"
+                      value={formData.subject}
                       onChange={handleChange}
                       required
-                      placeholder="Enter your full name"
-                      className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg focus:ring-2 focus:ring-[#f53924] focus:border-transparent outline-none pl-10"
+                      placeholder="How can we help?"
+                      className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-red-50 focus:border-red-500 focus:bg-white transition-all outline-none"
                     />
-                    <User className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
                   </div>
                 </div>
 
-                <div>
-                  <label htmlFor="email" className="block text-white text-sm font-medium mb-2">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      required
-                      placeholder="Enter your email address"
-                      className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg focus:ring-2 focus:ring-[#f53924] focus:border-transparent outline-none pl-10"
-                    />
-                    <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="subject" className="block text-white text-sm font-medium mb-2">
-                    Subject
-                  </label>
-                  <input
-                    type="text"
-                    id="subject"
-                    name="subject"
-                    value={formData.subject}
-                    onChange={handleChange}
-                    required
-                    placeholder="Enter the subject"
-                    className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg focus:ring-2 focus:ring-[#f53924] focus:border-transparent outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="message" className="block text-white text-sm font-medium mb-2">
-                    Message
-                  </label>
-                  <div className="relative">
+                <div className="space-y-2">
+                  <label htmlFor="message" className="text-sm font-medium text-gray-700 ml-1">Message</label>
+                  <div className="relative group">
+                    <MessageSquare className="absolute left-4 top-3.5 w-5 h-5 text-gray-400 group-focus-within:text-red-500 transition-colors" />
                     <textarea
                       id="message"
                       name="message"
                       value={formData.message}
                       onChange={handleChange}
                       required
-                      rows={5}
-                      placeholder="Enter your message"
-                      className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg focus:ring-2 focus:ring-[#f53924] focus:border-transparent outline-none pl-10"
+                      rows={4}
+                      placeholder="Tell us more about your inquiry..."
+                      className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-red-50 focus:border-red-500 focus:bg-white transition-all outline-none resize-none"
                     />
-                    <MessageSquare className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
                   </div>
                 </div>
 
-                <button
+                <Motion.button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-[#f53924] text-white py-3 rounded-lg font-semibold hover:bg-[#923830] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full bg-gradient-to-r from-red-600 to-orange-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-red-500/20 disabled:opacity-70 disabled:cursor-not-allowed hover:shadow-red-500/30 transition-all flex items-center justify-center gap-2"
                 >
                   {isSubmitting ? (
                     <>
@@ -145,78 +199,74 @@ const Contact = () => {
                     </>
                   ) : (
                     <>
-                      <Send className="w-5 h-5" />
                       Send Message
+                      <Send className="w-5 h-5" />
                     </>
                   )}
-                </button>
+                </Motion.button>
               </form>
-            </div>
+            </Motion.div>
 
-            {/* Contact Information */}
+            {/* Info Side */}
             <div className="space-y-8">
-              <div className="bg-gray-800 rounded-lg p-8">
-                <h2 className="text-2xl font-bold text-white mb-6">Get in touch</h2>
-                
-                <div className="space-y-6">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-[#f53924] rounded-full flex items-center justify-center flex-shrink-0">
-                      <Mail className="w-6 h-6 text-white" />
+              <Motion.div
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className="grid gap-6"
+              >
+                {contactInfo.map((info, index) => {
+                  const Icon = info.icon
+                  return (
+                    <div key={index} className="bg-white border border-gray-100 p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow flex items-start gap-5">
+                      <div className={`w-12 h-12 ${info.color} rounded-xl flex items-center justify-center flex-shrink-0`}>
+                        <Icon className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-gray-900 text-lg mb-1">{info.title}</h3>
+                        {info.details.map((detail, i) => (
+                          <p key={i} className="text-gray-600">{detail}</p>
+                        ))}
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-white font-semibold mb-1">Email</h3>
-                      <p className="text-gray-300">support@credcheck.com</p>
-                      <p className="text-gray-300">info@credcheck.com</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-[#f53924] rounded-full flex items-center justify-center flex-shrink-0">
-                      <Phone className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-white font-semibold mb-1">Phone</h3>
-                      <p className="text-gray-300">+1 (555) 123-4567</p>
-                      <p className="text-gray-300">Mon-Fri 9AM-6PM EST</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-[#f53924] rounded-full flex items-center justify-center flex-shrink-0">
-                      <MapPin className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-white font-semibold mb-1">Address</h3>
-                      <p className="text-gray-300">123 Tech Street</p>
-                      <p className="text-gray-300">Suite 456</p>
-                      <p className="text-gray-300">New York, NY 10001</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                  )
+                })}
+              </Motion.div>
 
               {/* FAQ Section */}
-              <div className="bg-gray-800 rounded-lg p-8">
-                <h3 className="text-xl font-bold text-white mb-4">Frequently Asked Questions</h3>
-                <div className="space-y-4">
+              <Motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+                className="bg-gray-50 rounded-3xl p-8 border border-gray-100"
+              >
+                <h3 className="text-xl font-bold text-gray-900 mb-6">Frequently Asked Questions</h3>
+                <div className="space-y-6">
                   <div>
-                    <h4 className="text-white font-semibold mb-2">How long does verification take?</h4>
-                    <p className="text-gray-300 text-sm">Most verifications are completed within seconds using our blockchain technology.</p>
+                    <h4 className="text-gray-900 font-semibold mb-2 flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                      How long does verification take?
+                    </h4>
+                    <p className="text-gray-600 text-sm ml-3.5 pl-2 border-l border-gray-200">
+                      Most verifications are completed within seconds using our blockchain technology.
+                    </p>
                   </div>
                   <div>
-                    <h4 className="text-white font-semibold mb-2">Is my data secure?</h4>
-                    <p className="text-gray-300 text-sm">Yes, we use military-grade encryption and blockchain technology to secure all data.</p>
-                  </div>
-                  <div>
-                    <h4 className="text-white font-semibold mb-2">Can I verify international credentials?</h4>
-                    <p className="text-gray-300 text-sm">Yes, CredCheck supports credential verification from institutions worldwide.</p>
+                    <h4 className="text-gray-900 font-semibold mb-2 flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                      Is my data secure?
+                    </h4>
+                    <p className="text-gray-600 text-sm ml-3.5 pl-2 border-l border-gray-200">
+                      Yes, we use military-grade encryption and blockchain technology to secure all data.
+                    </p>
                   </div>
                 </div>
-              </div>
+              </Motion.div>
             </div>
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   )
 }

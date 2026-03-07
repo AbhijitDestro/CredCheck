@@ -3,11 +3,16 @@ const User = require('../models/User');
 
 const protect = async (req, res, next) => {
     let token;
-    
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         try {
             token = req.headers.authorization.split(' ')[1];
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            if(!token) {
+                return res.status(401).json({ success: false, message: 'Not authorized, no token' });
+            }
+            const decoded = await jwt.verify(token, process.env.JWT_SECRET);
+            if(!decoded) {
+                return res.status(401).json({ success: false, message: 'Not authorized, token failed' });
+            }
             req.user = await User.findById(decoded.id).select('-password');
             next();
         } catch (error) {
@@ -21,12 +26,12 @@ const protect = async (req, res, next) => {
     }
 };
 
-const adminOnly = (req, res, next) => {
-    if (req.user && req.user.role === 'admin') {
+const issuerOnly = (req, res, next) => {
+    if (req.user && req.user.role === 'issuer') {
         next();
     } else {
-        res.status(403).json({ success: false, message: 'Access denied. Admin only.' });
+        res.status(403).json({ success: false, message: 'Access denied. Issuer only.' });
     }
 };
 
-module.exports = { protect, adminOnly };
+module.exports = { protect, issuerOnly };
