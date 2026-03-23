@@ -24,11 +24,12 @@ const searchCertificate = async (req, res) => {
             data: {
                 certificateId: certificate.certificateId,
                 studentName: certificate.studentName,
-                internshipDomain: certificate.internshipDomain,
+                domain: certificate.domain,
                 startDate: certificate.startDate,
                 endDate: certificate.endDate,
-                issueDate: certificate.issueDate,
-                isVerified: certificate.isVerified
+                createdAt: certificate.createdAt,
+                isVerified: certificate.isVerified,
+                status: certificate.status
             }
         });
     } catch (error) {
@@ -115,10 +116,10 @@ const verifyCertificate = async (req, res) => {
             data: {
                 certificateId: certificate.certificateId,
                 studentName: certificate.studentName,
-                internshipDomain: certificate.internshipDomain,
+                domain: certificate.domain,
                 startDate: certificate.startDate,
                 endDate: certificate.endDate,
-                issueDate: certificate.issueDate,
+                createdAt: certificate.createdAt,
                 isVerified: certificate.isVerified
             }
         });

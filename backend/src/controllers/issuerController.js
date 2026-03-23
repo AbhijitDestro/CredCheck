@@ -1,6 +1,8 @@
 const xlsx = require('xlsx');
 const Certificate = require('../models/Certificate');
 const User = require('../models/User');
+const { sendCertificateEmail } = require('../utils/emailService');
+const { generateCertificatePDF } = require('../utils/pdfGenerator');
 
 // @desc    Upload certificates via Excel
 // @route   POST /api/issuer/upload
@@ -22,60 +24,91 @@ const uploadCertificates = async (req, res) => {
         
         const certificates = [];
         const errors = [];
+        let successCount = 0;
         
         for (let i = 0; i < data.length; i++) {
             const row = data[i];
             
-            // Validate required fields
-            if (!row.certificateId || !row.studentName || !row.internshipDomain || 
-                !row.startDate || !row.endDate || !row.email) {
-                errors.push(`Row ${i + 2}: Missing required fields`);
+            // Validate required fields (Flexible keys)
+            const studentName = row.studentName || row.StudentName || row.Name || row.name;
+            const studentEmail = row.email || row.Email || row.studentEmail || row.StudentEmail || row.studentemail;
+            const domain = row.internshipDomain || row.InternshipDomain || row.Domain || row.domain || row.Course || row.internshipdomain;
+            const startDateRaw = row.startDate || row.StartDate;
+            const endDateRaw = row.endDate || row.EndDate;
+            let certificateId = row.certificateId || row.CertificateId || row.ID;
+            
+            if (!studentName || !studentEmail || !domain) {
+                errors.push(`Row ${i + 2}: Missing required fields (Name, Email, Domain)`);
                 continue;
             }
             
-            // Check for duplicate certificate ID
-            const existingCert = await Certificate.findOne({ 
-                certificateId: row.certificateId.toString().toUpperCase() 
-            });
-            
-            if (existingCert) {
-                errors.push(`Row ${i + 2}: Certificate ID ${row.certificateId} already exists`);
-                continue;
+            // Generate ID if missing
+            if (!certificateId) {
+                certificateId = `CERT-${Date.now()}-${Math.floor(Math.random() * 10000)}-${i}`.toUpperCase();
+            } else {
+                 // Check for duplicate certificate ID if provided
+                const existingCert = await Certificate.findOne({ 
+                    certificateId: certificateId.toString().toUpperCase() 
+                });
+                
+                if (existingCert) {
+                    errors.push(`Row ${i + 2}: Certificate ID ${certificateId} already exists`);
+                    continue;
+                }
             }
             
             // Parse dates
-            let startDate, endDate;
+            let startDate = new Date();
+            let endDate = new Date();
+            
             try {
-                startDate = parseExcelDate(row.startDate);
-                endDate = parseExcelDate(row.endDate);
+                if (startDateRaw) startDate = parseExcelDate(startDateRaw);
+                if (endDateRaw) endDate = parseExcelDate(endDateRaw);
             } catch (dateError) {
-                errors.push(`Row ${i + 2}: Invalid date format`);
-                continue;
+                // If dates are invalid, we default to today
             }
             
-            certificates.push({
-                certificateId: row.certificateId.toString().toUpperCase(),
-                studentName: row.studentName.trim(),
-                studentEmail: row.email ? row.email.trim().toLowerCase() : '',
-                domain: row.internshipDomain.trim(),
+            const newCert = new Certificate({
+                certificateId: certificateId.toString().toUpperCase(),
+                studentName: studentName.trim(),
+                studentEmail: studentEmail.trim().toLowerCase(),
+                domain: domain.trim(),
                 startDate,
                 endDate,
                 uploadedBy: req.user._id
             });
-        }
-        
-        let insertedCount = 0;
-        if (certificates.length > 0) {
-            const result = await Certificate.insertMany(certificates);
-            insertedCount = result.length;
+            
+            await newCert.save();
+            certificates.push(newCert);
+            successCount++;
+
+            // Send Email
+            try {
+                const emailResult = await sendCertificateEmail(
+                    newCert.studentEmail,
+                    newCert.studentName,
+                    newCert.certificateId,
+                    newCert.domain,
+                    newCert.startDate,
+                    newCert.endDate
+                );
+
+                if (emailResult.success) {
+                    newCert.emailSent = true;
+                    newCert.emailSentAt = Date.now();
+                    await newCert.save();
+                }
+            } catch (emailError) {
+                console.error(`Email failed for ${newCert.studentEmail}`);
+            }
         }
         
         res.status(201).json({
             success: true,
-            message: `Successfully uploaded ${insertedCount} certificates`,
+            message: `Successfully uploaded ${successCount} certificates`,
             data: {
                 totalRows: data.length,
-                inserted: insertedCount,
+                inserted: successCount,
                 errors: errors.length > 0 ? errors : null
             }
         });
@@ -97,7 +130,7 @@ const parseExcelDate = (excelDate) => {
         }
         return date;
     }
-    throw new Error('Invalid date format');
+    return new Date();
 };
 
 // @desc    Get all certificates
@@ -166,7 +199,7 @@ const getDashboardStats = async (req, res) => {
         // Get certificates by domain
         const certificatesByDomain = await Certificate.aggregate([
             { $match: { uploadedBy: req.user._id } },
-            { $group: { _id: '$internshipDomain', count: { $sum: 1 } } },
+            { $group: { _id: '$domain', count: { $sum: 1 } } },
             { $sort: { count: -1 } },
             { $limit: 5 }
         ]);
@@ -175,7 +208,7 @@ const getDashboardStats = async (req, res) => {
         const recentCertificates = await Certificate.find({ uploadedBy: req.user._id })
             .sort({ createdAt: -1 })
             .limit(5)
-            .select('certificateId studentName internshipDomain createdAt status');
+            .select('certificateId studentName domain createdAt status');
         
         res.json({
             success: true,
@@ -212,26 +245,75 @@ const getAllUsers = async (req, res) => {
 // @access  Private/Issuer
 const issueCertificate = async (req, res) => {
     try {
-        const { studentName, studentEmail, domain, courseName } = req.body; // courseName can be mapped to domain or stored if schema allows
+        const { studentName, studentEmail, domain, courseName } = req.body; 
+
+        if (!studentName || !studentEmail || (!domain && !courseName)) {
+             return res.status(400).json({ success: false, message: 'Missing required fields' });
+        }
 
         // Generate ID
-        const certificateId = 'CERT-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+        const certificateId = `CERT-${Date.now()}-${Math.floor(Math.random() * 1000)}`.toUpperCase();
         
         const certificate = await Certificate.create({
             certificateId,
             studentName,
             studentEmail,
-            domain: domain || courseName, // Fallback if frontend sends courseName
-            startDate: new Date(),
-            endDate: new Date(), // Just defaults for now if not provided
+            domain: domain || courseName,
+            startDate: new Date(), 
+            endDate: new Date(), 
             uploadedBy: req.user._id
         });
 
+         // Send Email
+         try {
+            const emailResult = await sendCertificateEmail(
+                certificate.studentEmail,
+                certificate.studentName,
+                certificate.certificateId,
+                certificate.domain,
+                certificate.startDate,
+                certificate.endDate
+            );
+
+            if (emailResult.success) {
+                certificate.emailSent = true;
+                certificate.emailSentAt = Date.now();
+                await certificate.save();
+            }
+        } catch (emailError) {
+            console.error(`Email failed for ${certificate.studentEmail}`);
+        }
+
         res.status(201).json({
             success: true,
-            message: 'Certificate issued successfully',
+            message: 'Certificate issued and email sent successfully',
             data: certificate
         });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// @desc    Preview certificate template PDF
+// @route   GET /api/issuer/preview-template
+// @access  Private/Issuer
+const previewTemplate = async (req, res) => {
+    try {
+        const dummyData = {
+            certificateId: 'SAMPLE-1234',
+            studentName: 'John Doe',
+            domain: 'Demo Domain Program',
+            startDate: new Date(),
+            endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)),
+            createdAt: new Date()
+        };
+        const pdfBytes = await generateCertificatePDF(dummyData);
+        
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'inline; filename=Certificate_Template.pdf');
+        res.setHeader('Content-Length', pdfBytes.length);
+        
+        res.send(Buffer.from(pdfBytes));
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -243,5 +325,6 @@ module.exports = {
     getAllCertificates,
     deleteCertificate,
     getDashboardStats,
-    getAllUsers
+    getAllUsers,
+    previewTemplate
 };

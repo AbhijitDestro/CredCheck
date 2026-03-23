@@ -3,14 +3,16 @@ import { motion as Motion, AnimatePresence } from 'framer-motion'
 import { Search, ShieldCheck, ShieldAlert, FileText, CheckCircle, XCircle, Award, User, Calendar, Loader } from 'lucide-react'
 import Navbar from '../../components/public/Navbar'
 import Footer from '../../components/public/Footer'
+import { certificateAPI } from '../../services/api'
 
 const VerifyCertificate = () => {
   const [certId, setCertId] = useState('')
   const [isVerifying, setIsVerifying] = useState(false)
   const [result, setResult] = useState(null) // null, 'valid', 'revoked', 'not-found'
+  const [resultData, setResultData] = useState(null)
   const [error, setError] = useState('')
 
-  const handleVerify = (e) => {
+  const handleVerify = async (e) => {
     e.preventDefault()
     if (!certId.trim()) {
       setError('Please enter a Certificate ID')
@@ -20,19 +22,27 @@ const VerifyCertificate = () => {
     setIsVerifying(true)
     setError('')
     setResult(null)
+    setResultData(null) // Added this line
 
-    // Simulate API call for verification
-    setTimeout(() => {
-      const id = certId.toUpperCase()
-      if (id.endsWith('REV')) {
+    try {
+      const res = await certificateAPI.search(certId)
+      const certInfo = res.data.data
+      setResultData(certInfo)
+      
+      if (certInfo.status === 'revoked') {
         setResult('revoked')
-      } else if (id.endsWith('ERR')) {
-        setResult('not-found')
       } else {
         setResult('valid')
       }
+    } catch (err) {
+      if (err.response && err.response.status === 404) {
+        setResult('not-found')
+      } else {
+        setError('An error occurred during verification. Please try again.')
+      }
+    } finally {
       setIsVerifying(false)
-    }, 1500)
+    }
   }
 
   return (
@@ -151,28 +161,28 @@ const VerifyCertificate = () => {
                         Verified Authentic
                       </div>
                       
-                      <h2 className="text-3xl font-bold text-gray-900 mb-2">Advanced Software Engineering</h2>
-                      <p className="text-gray-500 text-lg mb-8">Issued by Tech University of Global Sciences</p>
+                      <h2 className="text-3xl font-bold text-gray-900 mb-2">{resultData?.domain}</h2>
+                      <p className="text-gray-500 text-lg mb-8">Issued by CredCheck Verification System</p>
                       
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-2xl border border-gray-100">
                         <div>
                           <p className="text-sm text-gray-400 uppercase tracking-wider font-semibold mb-1 flex items-center gap-2">
                             <User className="w-4 h-4" /> Issued To
                           </p>
-                          <p className="font-bold text-gray-900 text-lg">Alex Mercer</p>
+                          <p className="font-bold text-gray-900 text-lg">{resultData?.studentName}</p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-400 uppercase tracking-wider font-semibold mb-1 flex items-center gap-2">
                             <Calendar className="w-4 h-4" /> Issue Date
                           </p>
-                          <p className="font-bold text-gray-900 text-lg">October 15, 2024</p>
+                          <p className="font-bold text-gray-900 text-lg">{new Date(resultData?.createdAt || Date.now()).toLocaleDateString()}</p>
                         </div>
                         <div className="sm:col-span-2 pt-4 border-t border-gray-200">
                           <p className="text-sm text-gray-400 uppercase tracking-wider font-semibold mb-1">
                             Certificate ID
                           </p>
                           <p className="font-mono font-medium text-gray-600 bg-white px-3 py-2 rounded-lg border border-gray-200 inline-block">
-                            {certId.toUpperCase() || 'CERT-VALID'}
+                            {resultData?.certificateId || certId.toUpperCase()}
                           </p>
                         </div>
                       </div>

@@ -120,8 +120,6 @@ export default function IssuerDashboard() {
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden font-sans">
-      <Toaster position="bottom-right" />
-      
       {/* Profile Modal */}
       <AnimatePresence>
         {isProfileModalOpen && (
@@ -436,6 +434,25 @@ function IssueTab({ onIssue }) {
     }
   };
 
+  const handleDownloadPDFTemplate = async (e) => {
+    if (e) e.preventDefault();
+    try {
+      const toastId = toast.loading('Generating design template...');
+      const response = await issuerAPI.previewTemplate();
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'Certificate_Template.pdf');
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success('Design preview downloaded!', { id: toastId });
+    } catch (error) {
+      toast.error('Failed to download design template');
+    }
+  };
+
   const handleBulkUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -446,7 +463,11 @@ function IssueTab({ onIssue }) {
 
     try {
       const res = await issuerAPI.uploadCertificates(formData);
-      toast.success(res.data.message || 'Certificates uploaded successfully!');
+      if (res.data.data && res.data.data.errors && res.data.data.errors.length > 0) {
+        toast.error(`Inserted ${res.data.data.inserted}. Error: ${res.data.data.errors[0]}`);
+      } else {
+        toast.success(res.data.message || 'Certificates uploaded successfully!');
+      }
       if (onIssue) onIssue();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to upload certificates');
@@ -475,7 +496,7 @@ function IssueTab({ onIssue }) {
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden min-h-[500px] flex flex-col">
-      <div className="flex border-b border-gray-100">
+      <div className="flex border-b border-gray-100 items-center">
         <button 
           onClick={() => setIssueType('single')}
           className={`flex-1 py-4 font-medium transition-all ${issueType === 'single' ? 'text-[#f53924] border-b-2 border-[#f53924]' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
@@ -488,6 +509,15 @@ function IssueTab({ onIssue }) {
         >
           Bulk Upload (Excel)
         </button>
+        <div className="pr-4 pl-2">
+          <button 
+            type="button"
+            onClick={handleDownloadPDFTemplate} 
+            className="px-4 py-2 bg-[#f53924]/10 text-[#f53924] text-sm font-semibold rounded-lg hover:bg-[#f53924]/20 transition-all flex items-center gap-2 whitespace-nowrap"
+          >
+            <FileText size={16} /> Preview Design
+          </button>
+        </div>
       </div>
 
       <div className="p-8 flex-1">
@@ -541,6 +571,7 @@ function IssueTab({ onIssue }) {
                   accept=".xlsx, .xls, .csv" 
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                   onChange={handleBulkUpload}
+                  onClick={(e) => { e.target.value = null }}
                   disabled={isLoading}
                 />
                 <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 transition-transform">

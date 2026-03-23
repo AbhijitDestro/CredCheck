@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { authAPI } from '../../services/api'
 import useAuthStore from '../../store/authStore'
-import { toast, Toaster } from 'react-hot-toast'
+import { toast } from 'react-hot-toast'
 import { motion as Motion } from 'framer-motion'
 
 const SignUp = () => {
@@ -46,7 +46,7 @@ const SignUp = () => {
 
   return (
     <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center p-4 relative overflow-hidden">
-      <Toaster position="top-center" reverseOrder={false} />
+
       {/* Background Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
         <div className="absolute -top-[20%] -right-[10%] w-[800px] h-[800px] bg-blue-800/60  rounded-full blur-[100px]"></div>

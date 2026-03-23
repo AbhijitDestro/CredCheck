@@ -1,5 +1,6 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast'
 import Landing from './pages/public/Landing'
 import Download from './pages/public/Download'
 import Contact from './pages/public/Contact'
@@ -14,6 +15,7 @@ const App = () => {
   return (
     <Router>
       <div className="min-h-screen">
+        <Toaster position="top-right" />
         <main>
           <Routes>
             <Route path="/" element={<Landing />} />

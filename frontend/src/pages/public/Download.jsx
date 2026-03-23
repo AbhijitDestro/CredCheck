@@ -3,17 +3,19 @@ import { Download, FileText, Award, Calendar, User, Search, Loader, FileCheck, A
 import Navbar from '../../components/public/Navbar'
 import Footer from '../../components/public/Footer'
 import { motion as Motion, AnimatePresence } from 'framer-motion'
+import { certificateAPI } from '../../services/api'
+import toast, { Toaster } from 'react-hot-toast'
 
 const CertificateDownload = () => {
-  const [studentId, setStudentId] = useState('')
+  const [certId, setCertId] = useState('')
   const [searchResults, setSearchResults] = useState(null)
   const [isSearching, setIsSearching] = useState(false)
   const [error, setError] = useState('')
 
   const handleSearch = async (e) => {
     e.preventDefault()
-    if (!studentId.trim()) {
-      setError('Please enter a student ID')
+    if (!certId.trim()) {
+      setError('Please enter a Certificate ID')
       return
     }
 
@@ -21,46 +23,47 @@ const CertificateDownload = () => {
     setError('')
     setSearchResults(null)
 
-    // Simulate API call
-    setTimeout(() => {
-      // Mock search results
-      const hasResults = Math.random() > 0.2 // 80% chance of having results
-      if (hasResults) {
-        setSearchResults([
-          {
-            id: 'CERT-2024-001',
-            studentName: 'John Doe',
-            course: 'Bachelor of Computer Science',
-            institution: 'University of Technology',
-            issueDate: '2024-01-15',
-            status: 'issued'
-          },
-          {
-            id: 'CERT-2024-002',
-            studentName: 'John Doe',
-            course: 'Master of Business Administration',
-            institution: 'Business School',
-            issueDate: '2023-12-20',
-            status: 'issued'
-          }
-        ])
+    try {
+      const res = await certificateAPI.search(certId)
+      if (res.data.success && res.data.data) {
+        setSearchResults([res.data.data])
       } else {
         setSearchResults([])
       }
+    } catch (err) {
+      if (err.response && err.response.status === 404) {
+        setSearchResults([])
+      } else {
+        setError('An error occurred while searching for the certificate.')
+      }
+    } finally {
       setIsSearching(false)
-    }, 1500)
+    }
   }
 
-  const handleDownload = (certificateId) => {
-    // Simulate download
-    const link = document.createElement('a')
-    link.href = `/api/certificates/${certificateId}/download`
-    link.download = `certificate-${certificateId}.pdf`
-    link.click()
+  const handleDownload = async (certificateId) => {
+    try {
+      const toastId = toast.loading('Generating PDF...')
+      const response = await certificateAPI.download(certificateId)
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `Certificate_${certificateId}.pdf`)
+      document.body.appendChild(link)
+      link.click()
+      link.parentNode.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      
+      toast.success('Downloaded successfully!', { id: toastId })
+    } catch (err) {
+      toast.error('Failed to download certificate.')
+    }
   }
 
   return (
     <div className="min-h-screen bg-white font-sans selection:bg-red-100 selection:text-red-600">
+      <Toaster position="top-right" />
       <Navbar />
       
       <div className="relative pt-32 pb-20 px-4 min-h-screen flex flex-col justify-center overflow-hidden">
@@ -88,7 +91,7 @@ const CertificateDownload = () => {
               </span>
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Securely access and download your verified academic credentials using your unique student identifier.
+              Securely access and download your verified academic credentials using your unique Certificate ID.
             </p>
           </Motion.div>
 
@@ -106,14 +109,14 @@ const CertificateDownload = () => {
                 </div>
                 <input
                   type="text"
-                  value={studentId}
-                  onChange={(e) => setStudentId(e.target.value)}
-                  placeholder="Enter Student ID (e.g., STU-2024-001)"
+                  value={certId}
+                  onChange={(e) => setCertId(e.target.value)}
+                  placeholder="Enter Certificate ID (e.g., CERT-...)"
                   className="w-full pl-14 pr-36 py-5 bg-gray-50/50 border border-gray-200 rounded-2xl text-lg text-gray-900 placeholder-gray-400 focus:ring-4 focus:ring-orange-100 focus:border-orange-500 focus:bg-white transition-all outline-none"
                 />
                 <Motion.button
                   type="submit"
-                  disabled={isSearching || !studentId.trim()}
+                  disabled={isSearching || !certId.trim()}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className="absolute right-2 top-2 bottom-2 bg-gradient-to-r from-orange-600 to-red-600 text-white px-8 rounded-xl font-semibold shadow-lg shadow-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-orange-500/30 transition-all flex items-center gap-2"
@@ -175,7 +178,7 @@ const CertificateDownload = () => {
                   <div className="grid gap-6">
                     {searchResults.map((certificate, index) => (
                       <Motion.div
-                        key={certificate.id}
+                        key={certificate.certificateId}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
@@ -199,13 +202,13 @@ const CertificateDownload = () => {
                                 Verified
                               </span>
                               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium">
-                                {certificate.id}
+                                {certificate.certificateId}
                               </span>
                             </div>
                             <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors">
-                              {certificate.course}
+                              {certificate.internshipDomain}
                             </h3>
-                            <p className="text-gray-600 mb-4">{certificate.institution}</p>
+                            <p className="text-gray-600 mb-4">{certificate.institution || 'Credential'}</p>
                             
                             <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500">
                               <div className="flex items-center gap-2">
@@ -214,7 +217,7 @@ const CertificateDownload = () => {
                               </div>
                               <div className="flex items-center gap-2">
                                 <Calendar className="w-4 h-4" />
-                                <span>Issued: {certificate.issueDate}</span>
+                                <span>Issued: {new Date(certificate.issueDate || certificate.createdAt || Date.now()).toLocaleDateString()}</span>
                               </div>
                             </div>
                           </div>
@@ -222,7 +225,7 @@ const CertificateDownload = () => {
                           {/* Action */}
                           <div className="flex-shrink-0 pt-4 md:pt-0 border-t md:border-t-0 border-gray-100 md:pl-8 md:border-l">
                             <Motion.button
-                              onClick={() => handleDownload(certificate.id)}
+                              onClick={() => handleDownload(certificate.certificateId)}
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                               className="w-full md:w-auto bg-gray-900 text-white px-6 py-3 rounded-xl font-semibold hover:bg-orange-600 transition-colors flex items-center justify-center gap-2 group/btn"

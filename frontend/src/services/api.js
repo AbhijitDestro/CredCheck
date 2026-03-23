@@ -42,15 +42,21 @@ export const authAPI = {
 
 // Issuer APIs
 export const issuerAPI = {
-    uploadCertificates: (formData) => api.post('/issuer/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-    }),
+    uploadCertificates: (formData) => {
+        const token = localStorage.getItem('token');
+        return axios.post(`${API_URL}/issuer/upload`, formData, {
+            headers: { 
+                Authorization: `Bearer ${token}` 
+            }
+        });
+    },
     issueCertificate: (data) => api.post('/issuer/issue', data),
     getAllCertificates: (page = 1, limit = 10) => 
         api.get(`/issuer/certificates?page=${page}&limit=${limit}`),
     deleteCertificate: (id) => api.delete(`/issuer/certificates/${id}`),
     getStats: () => api.get('/issuer/stats'),
-    getAllUsers: () => api.get('/issuer/users')
+    getAllUsers: () => api.get('/issuer/users'),
+    previewTemplate: () => api.get('/issuer/preview-template', { responseType: 'blob' })
 };
 
 // Certificate APIs

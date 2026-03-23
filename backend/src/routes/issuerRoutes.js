@@ -8,7 +8,8 @@ const {
     getAllCertificates,
     deleteCertificate,
     getDashboardStats,
-    getAllUsers
+    getAllUsers,
+    previewTemplate
 } = require('../controllers/issuerController');
 
 // Configure multer for memory storage
@@ -16,12 +17,18 @@ const storage = multer.memoryStorage();
 const upload = multer({
     storage,
     fileFilter: (req, file, cb) => {
-        if (file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
-            file.mimetype === 'application/vnd.ms-excel' || 
-            file.mimetype === 'text/csv') {
+        const allowedTypes = [
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-excel',
+            'text/csv',
+            'application/csv',
+            'application/octet-stream'
+        ];
+        // Allow based on mimetype OR file extension
+        if (allowedTypes.includes(file.mimetype) || file.originalname.match(/\.(xlsx|xls|csv)$/i)) {
             cb(null, true);
         } else {
-            cb(new Error('Only Excel or CSV files are allowed'), false);
+            cb(new Error(`Invalid file type: ${file.mimetype}`), false);
         }
     },
     limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
@@ -30,6 +37,8 @@ const upload = multer({
 router.use(protect, issuerOnly);
 
 router.post('/upload', upload.single('file'), uploadCertificates);
+router.post('/issue', issueCertificate);
+router.get('/preview-template', previewTemplate);
 router.get('/certificates', getAllCertificates);
 router.delete('/certificates/:id', deleteCertificate);
 router.get('/stats', getDashboardStats);

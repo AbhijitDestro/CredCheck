@@ -97,7 +97,7 @@ export default function StudentDashboard() {
         <div>
           <div className="flex items-center gap-3 px-2 mb-10 justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#f53924] to-[#d9534f] flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-red-500/30">
+              <div className="w-10 h-10 rounded-xl bg-linear-to-br from-[#f53924] to-[#d9534f] flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-red-500/30">
                 S
               </div>
               {(sidebarOpen || isMobile) && <span className="text-xl font-bold text-gray-800">Student Portal</span>}
@@ -140,7 +140,7 @@ export default function StudentDashboard() {
       </motion.aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col overflow-hidden relative bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-50 via-white to-white">
+      <main className="flex-1 flex flex-col overflow-hidden relative bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-gray-50 via-white to-white">
         <header className="h-20 flex items-center justify-between px-6 md:px-10 z-10 sticky top-0 bg-white/80 backdrop-blur-md lg:bg-transparent">
           <div className="flex items-center gap-4">
             {!sidebarOpen && (
@@ -331,7 +331,7 @@ function MyCertificatesTab() {
               key={cert._id} 
               className="group relative bg-white rounded-2xl p-1 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300"
             >
-              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 aspect-[4/3] flex flex-col items-center justify-center text-center relative overflow-hidden">
+              <div className="bg-linear-to-br from-gray-50 to-gray-100 rounded-xl p-6 aspect-4/3 flex flex-col items-center justify-center text-center relative overflow-hidden">
                 {/* Decorative background elements */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 rounded-full blur-2xl -translate-y-10 translate-x-10"></div>
                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-500/5 rounded-full blur-xl translate-y-10 -translate-x-5"></div>
@@ -339,11 +339,11 @@ function MyCertificatesTab() {
                 <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm relative z-10 text-[#f53924]">
                   <FileCheck size={24} />
                 </div>
-                <h3 className="font-bold text-gray-800 text-lg mb-1 relative z-10">{cert.internshipDomain || cert.domain}</h3>
+                <h3 className="font-bold text-gray-800 text-lg mb-1 relative z-10">{cert.domain}</h3>
                 <p className="text-sm text-gray-500 relative z-10">Issued to {cert.studentName}</p>
                 
                 <div className="mt-4 px-3 py-1 bg-white/60 backdrop-blur-sm rounded-full text-xs font-medium text-gray-600 border border-gray-200/50 relative z-10">
-                  {new Date(cert.issueDate || cert.createdAt).toLocaleDateString()}
+                  {new Date(cert.createdAt).toLocaleDateString()}
                 </div>
 
                 {/* Hover actions overlay */}
@@ -381,7 +381,7 @@ function MyCertificatesTab() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: certificates.length * 0.1 }}
-            className="bg-white rounded-2xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center p-8 aspect-[4/3] hover:border-red-300 hover:bg-red-50/30 cursor-pointer transition-all group"
+            className="bg-white rounded-2xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center p-8 aspect-4/3 hover:border-red-300 hover:bg-red-50/30 cursor-pointer transition-all group"
             onClick={() => {
               toast('Use the "Fetch New Certificate" tab to add certificates', { icon: 'ℹ️' });
             }}
@@ -464,7 +464,7 @@ function FetchCertificateTab() {
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Certificate Unique ID</label>
                   <input name="certId" required type="text" className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#f53924]/50 focus:border-[#f53924] transition-all bg-gray-50/50 hover:bg-gray-50 font-mono tracking-widest placeholder:tracking-normal placeholder:font-sans" placeholder="e.g. CERT-ABCD-1234"/>
                 </div>
-                <button disabled={isLoading} type="submit" className="w-full py-4 bg-gradient-to-r from-[#f53924] to-[#d9534f] hover:from-[#e0301d] hover:to-[#c94d49] text-white rounded-xl font-bold tracking-wide shadow-lg shadow-red-500/25 hover:shadow-xl hover:shadow-red-500/40 transition-all flex justify-center items-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed">
+                <button disabled={isLoading} type="submit" className="w-full py-4 bg-linear-to-r from-[#f53924] to-[#d9534f] hover:from-[#e0301d] hover:to-[#c94d49] text-white rounded-xl font-bold tracking-wide shadow-lg shadow-red-500/25 hover:shadow-xl hover:shadow-red-500/40 transition-all flex justify-center items-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed">
                   {isLoading ? (
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   ) : (
@@ -492,8 +492,8 @@ function FetchCertificateTab() {
                   <FileCheck size={28} />
                 </div>
                 <div>
-                  <h4 className="font-bold text-lg text-gray-800">{fetchedCert?.internshipDomain}</h4>
-                  <p className="text-sm text-gray-500">Issued to {fetchedCert?.studentName} • {new Date(fetchedCert?.issueDate || Date.now()).toLocaleDateString()}</p>
+                  <h4 className="font-bold text-lg text-gray-800">{fetchedCert?.domain}</h4>
+                  <p className="text-sm text-gray-500">Issued to {fetchedCert?.studentName} • {new Date(fetchedCert?.createdAt || Date.now()).toLocaleDateString()}</p>
                 </div>
               </div>
 
@@ -632,7 +632,7 @@ function VerifyCertificateTab() {
                 <ShieldCheck size={32} />
               </div>
               <h3 className="text-2xl font-bold text-gray-800 mb-2">Certificate is Valid</h3>
-              <p className="text-green-700 font-medium mb-6 flex items-center gap-2 bg-green-50 py-2 px-4 rounded-lg border border-green-100 inline-flex">
+              <p className="text-green-700 font-medium mb-6 inline-flex items-center gap-2 bg-green-50 py-2 px-4 rounded-lg border border-green-100">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 Blockchain Verified Signature
               </p>
@@ -644,11 +644,11 @@ function VerifyCertificateTab() {
                 </div>
                 <div className="pb-4 border-b border-gray-100 text-sm">
                   <span className="text-gray-400 uppercase tracking-wider text-xs block mb-1">Credential</span>
-                  <span className="font-semibold text-gray-800">{verificationData.internshipDomain}</span>
+                  <span className="font-semibold text-gray-800">{verificationData.domain}</span>
                 </div>
                 <div className="text-sm">
                   <span className="text-gray-400 uppercase tracking-wider text-xs block mb-1">Issue Date</span>
-                  <span className="font-semibold text-gray-800">{new Date(verificationData.issueDate || Date.now()).toLocaleDateString()}</span>
+                  <span className="font-semibold text-gray-800">{new Date(verificationData.createdAt || Date.now()).toLocaleDateString()}</span>
                 </div>
               </div>
             </motion.div>
@@ -665,7 +665,7 @@ function VerifyCertificateTab() {
                 <div className="absolute inset-0 bg-red-500/20 rounded-full animate-ping"></div>
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">Certificate Revoked</h3>
-              <p className="text-red-700 font-medium mb-4 flex items-center gap-2 bg-red-100/50 py-2 px-4 rounded-lg border border-red-200 inline-flex">
+              <p className="text-red-700 font-medium mb-4 inline-flex items-center gap-2 bg-red-100/50 py-2 px-4 rounded-lg border border-red-200">
                 <XCircle size={16} /> Unauthorized or Invalidated
               </p>
               <p className="text-gray-600 text-sm leading-relaxed bg-white/60 p-4 rounded-xl border border-red-100">
