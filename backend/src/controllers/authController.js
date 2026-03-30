@@ -31,7 +31,7 @@ const registerUser = async (req, res) => {
             role
         });
         const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
-        return res.status(201).json({ message: 'User registered successfully', success: true, user: { _id: newUser._id, name: newUser.name, email: newUser.email, role: newUser.role }, token });
+        return res.status(201).json({ message: 'User registered successfully', success: true, user: { _id: newUser._id, name: newUser.name, email: newUser.email, role: newUser.role, organizationName: newUser.organizationName, signatureBase64: newUser.signatureBase64 }, token });
     }catch(error){
         return res.status(500).json({ success: false, message: error.message });
     }
@@ -106,8 +106,21 @@ const updateProfile = async (req, res) => {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
+        if (!req.body) {
+            return res.status(400).json({ success: false, message: 'No data provided' });
+        }
+
         user.name = req.body.name || user.name;
         user.email = req.body.email || user.email;
+
+        if (req.body.organizationName !== undefined) {
+            user.organizationName = req.body.organizationName;
+        }
+
+        if (req.file) {
+            const base64Image = req.file.buffer.toString('base64');
+            user.signatureBase64 = `data:${req.file.mimetype};base64,${base64Image}`;
+        }
 
         if (req.body.password) {
             user.password = await bcrypt.hash(req.body.password, 10);
@@ -122,6 +135,8 @@ const updateProfile = async (req, res) => {
                 name: updatedUser.name,
                 email: updatedUser.email,
                 role: updatedUser.role,
+                organizationName: updatedUser.organizationName,
+                signatureBase64: updatedUser.signatureBase64,
             },
         });
     } catch (error) {

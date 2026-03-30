@@ -44,24 +44,23 @@ const Hero = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Link to="/verify-credentials">
+              <Link to="/signup">
                 <Motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full sm:w-auto px-8 py-4 bg-[#f53924] text-white rounded-xl font-semibold text-lg shadow-lg shadow-red-500/30 flex items-center justify-center gap-2 hover:bg-[#d9301e] transition-colors"
+                  className="w-full sm:w-auto px-8 py-4 bg-[#f53924] text-white rounded-xl font-semibold text-lg shadow-lg shadow-red-500/30 flex items-center justify-center gap-2 hover:bg-[#d9301e] transition-colors cursor-pointer"
                 >
                   <Search className="w-5 h-5" />
-                  Verify Now
+                  Get Started
                 </Motion.button>
               </Link>
-              <Link to="/download">
+              <Link to="/about">
                 <Motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className="w-full sm:w-auto px-8 py-4 bg-white text-black border border-gray-200 rounded-xl font-semibold text-lg hover:border-black hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
                 >
-                  <Download className="w-5 h-5" />
-                  Download
+                  Learn More <ArrowRight className="w-5 h-5" />
                 </Motion.button>
               </Link>
             </div>

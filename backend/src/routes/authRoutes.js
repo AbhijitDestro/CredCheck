@@ -3,6 +3,19 @@ const router = express.Router();
 const { body } = require('express-validator');
 const { registerUser, loginUser, getProfile, updateProfile } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
+const multer = require('multer');
+
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only image files are allowed!'), false);
+        }
+    }
+});
 
 router.post('/register', [
     body('name').trim().notEmpty().withMessage('Name is required'),
@@ -17,6 +30,6 @@ router.post('/login', [
 ], loginUser);
 
 router.get('/me', protect, getProfile);
-router.put('/update', protect, updateProfile);
+router.put('/update', protect, upload.single('signature'), updateProfile);
 
 module.exports = router;

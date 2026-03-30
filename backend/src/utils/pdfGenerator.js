@@ -156,10 +156,10 @@ const generateCertificatePDF = async (certificateData) => {
         x: 80, y: bottomY - 30, size: 12, font: helvetica, color: rgb(0.4, 0.4, 0.4)
     });
 
-    // Center logo placeholder (CredCheck text)
-    const logoText = 'CredCheck';
-    const logoWidth = helveticaBold.widthOfTextAtSize(logoText, 24);
-    page.drawText(logoText, {
+    // Center logo placeholder (CredCheck text) or Organization Name
+    const orgName = certificateData.uploadedBy?.organizationName || 'CredCheck';
+    const logoWidth = helveticaBold.widthOfTextAtSize(orgName, 24);
+    page.drawText(orgName, {
         x: (width - logoWidth) / 2,
         y: bottomY - 5,
         size: 24,
@@ -169,6 +169,45 @@ const generateCertificatePDF = async (certificateData) => {
 
     // Right side: Signature
     const sigX = width - 230;
+    
+    // Draw signature image if available
+    if (certificateData.uploadedBy?.signatureBase64) {
+        try {
+            const base64Data = certificateData.uploadedBy.signatureBase64.split(',')[1];
+            const isPng = certificateData.uploadedBy.signatureBase64.includes('image/png');
+            const imageBytes = Buffer.from(base64Data, 'base64');
+            let signatureImage;
+            if (isPng) {
+                signatureImage = await pdfDoc.embedPng(imageBytes);
+            } else {
+                signatureImage = await pdfDoc.embedJpg(imageBytes);
+            }
+            
+            let imgDims = signatureImage.scale(1);
+            const maxWidth = 150;
+            const maxHeight = 60;
+            
+            const scaleX = maxWidth / imgDims.width;
+            const scaleY = maxHeight / imgDims.height;
+            const scale = Math.min(scaleX, scaleY, 1); // Don't upscale
+            
+            imgDims = signatureImage.scale(scale);
+
+            // Center the signature above the line
+            const imgX = sigX + (150 - imgDims.width) / 2;
+            const imgY = bottomY + 25;
+            
+            page.drawImage(signatureImage, {
+                x: imgX,
+                y: imgY,
+                width: imgDims.width,
+                height: imgDims.height,
+            });
+        } catch (err) {
+            console.error('Error embedding signature image:', err);
+        }
+    }
+
     page.drawLine({
         start: { x: sigX, y: bottomY + 20 },
         end: { x: sigX + 150, y: bottomY + 20 },

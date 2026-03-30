@@ -25,6 +25,13 @@ const userSchema = new mongoose.Schema({
         enum: ['student', 'issuer'],
         default: 'student'
     },
+    organizationName: {
+        type: String,
+        trim: true
+    },
+    signatureBase64: {
+        type: String
+    },
     createdAt: {
         type: Date,
         default: Date.now

@@ -10,7 +10,7 @@ const searchCertificate = async (req, res) => {
         
         const certificate = await Certificate.findOne({ 
             certificateId: certificateId.toUpperCase() 
-        });
+        }).populate('uploadedBy');
         
         if (!certificate) {
             return res.status(404).json({ 
@@ -46,7 +46,7 @@ const downloadCertificate = async (req, res) => {
         
         const certificate = await Certificate.findOne({ 
             certificateId: certificateId.toUpperCase() 
-        });
+        }).populate('uploadedBy');
         
         if (!certificate) {
             return res.status(404).json({ 

@@ -305,7 +305,8 @@ const previewTemplate = async (req, res) => {
             domain: 'Demo Domain Program',
             startDate: new Date(),
             endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)),
-            createdAt: new Date()
+            createdAt: new Date(),
+            uploadedBy: req.user
         };
         const pdfBytes = await generateCertificatePDF(dummyData);
         

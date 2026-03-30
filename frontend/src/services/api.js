@@ -36,7 +36,18 @@ export const authAPI = {
     login: (credentials) => api.post('/auth/login', credentials),
     register: (userData) => api.post('/auth/register', userData),
     getMe: () => api.get('/auth/me'),
-    updateProfile: (userData) => api.put('/auth/update', userData),
+    updateProfile: (userData) => {
+        if (userData instanceof FormData) {
+            const token = localStorage.getItem('token');
+            return axios.put(`${API_URL}/auth/update`, userData, {
+                headers: { 
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+        }
+        return api.put('/auth/update', userData);
+    },
     createAdmin: (adminData) => api.post('/auth/create-admin', adminData)
 };
 

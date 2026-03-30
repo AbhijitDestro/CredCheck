@@ -16,7 +16,6 @@ import {
   FileSpreadsheet,
   User,
   X,
-  Edit2,
   Menu
 } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
@@ -253,15 +252,37 @@ function ProfileModal({ user, onClose, onUpdate }) {
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
-    password: ''
+    password: '',
+    organizationName: user?.organizationName || ''
   });
+  const [signatureFile, setSignatureFile] = useState(null);
+  const [signaturePreview, setSignaturePreview] = useState(user?.signatureBase64 || '');
   const [loading, setLoading] = useState(false);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSignatureFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSignaturePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await authAPI.updateProfile(formData);
+      const data = new FormData();
+      data.append('name', formData.name);
+      data.append('email', formData.email);
+      if (formData.password) data.append('password', formData.password);
+      if (formData.organizationName !== undefined) data.append('organizationName', formData.organizationName);
+      if (signatureFile) data.append('signature', signatureFile);
+
+      const response = await authAPI.updateProfile(data);
       toast.success('Profile updated successfully');
       onUpdate(response.data.user);
     } catch (error) {
@@ -306,6 +327,34 @@ function ProfileModal({ user, onClose, onUpdate }) {
               className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#f53924] bg-gray-50"
               required
             />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Organization Name</label>
+            <input 
+              type="text" 
+              value={formData.organizationName}
+              onChange={(e) => setFormData({...formData, organizationName: e.target.value})}
+              className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#f53924] bg-gray-50"
+              placeholder="e.g. Acme Corp"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Signature Image</label>
+            <div className="flex items-center gap-4">
+              {signaturePreview && (
+                <div className="w-16 h-16 border rounded-lg overflow-hidden flex items-center justify-center bg-gray-50">
+                  <img src={signaturePreview} alt="Signature Preview" className="max-w-full max-h-full object-contain" />
+                </div>
+              )}
+              <div className="flex-1">
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-[#f53924] hover:file:bg-red-100"
+                />
+              </div>
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">New Password (Optional)</label>
