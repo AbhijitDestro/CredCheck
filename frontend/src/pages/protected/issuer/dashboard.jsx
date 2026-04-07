@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line no-unused-vars
 import { 
   Briefcase, 
   FileText, 
@@ -105,7 +105,8 @@ export default function IssuerDashboard() {
       await issuerAPI.deleteCertificate(id);
       toast.success('Certificate revoked successfully');
       fetchData(); // Refresh data
-    } catch (error) {
+    } catch (err) {
+      console.error(err);
       toast.error('Failed to revoke certificate');
     }
   };
@@ -285,8 +286,9 @@ function ProfileModal({ user, onClose, onUpdate }) {
       const response = await authAPI.updateProfile(data);
       toast.success('Profile updated successfully');
       onUpdate(response.data.user);
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to update profile');
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Failed to update profile');
     } finally {
       setLoading(false);
     }
@@ -476,7 +478,8 @@ function IssueTab({ onIssue }) {
       toast.success('Certificate issued successfully!');
       e.target.reset();
       if (onIssue) onIssue();
-    } catch (error) {
+    } catch (err) {
+      console.error(err);
       toast.error('Failed to issue certificate');
     } finally {
       setIsLoading(false);
@@ -497,7 +500,8 @@ function IssueTab({ onIssue }) {
       link.parentNode.removeChild(link);
       window.URL.revokeObjectURL(url);
       toast.success('Design preview downloaded!', { id: toastId });
-    } catch (error) {
+    } catch (err) {
+      console.error(err);
       toast.error('Failed to download design template');
     }
   };
