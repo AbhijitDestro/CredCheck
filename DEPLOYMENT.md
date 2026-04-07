@@ -85,3 +85,16 @@ To run the project locally:
 2. Create a `.env` file with `VITE_API_URL=http://localhost:3000/api`.
 3. Run `npm install`.
 4. Run `npm run dev`.
+
+---
+
+## Troubleshooting
+
+### CORS Errors
+If you see a CORS error in the browser console (e.g., `Access-Control-Allow-Origin` header mismatch), ensure that the `CLIENT_URL` environment variable on your **backend** exactly matches your frontend URL.
+
+- **Frontend URL**: `https://your-frontend.vercel.app`
+- **Backend CLIENT_URL**: `https://your-frontend.vercel.app` (No trailing slash!)
+
+The backend now supports multiple origins. If you have multiple frontend domains (e.g., a custom domain and a Vercel preview domain), separate them with commas:
+`CLIENT_URL=https://credcheck-livid.vercel.app,https://your-custom-domain.com`
