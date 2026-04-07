@@ -1,17 +1,15 @@
 const nodemailer = require('nodemailer');
 
-// Create reusable transporter
-const createTransporter = () => {
-    return nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
-        secure: process.env.EMAIL_PORT == 465, // true for 465, false for other ports
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-        },
-    });
-};
+// Create singleton transporter
+const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    secure: process.env.EMAIL_PORT == 465, // true for 465, false for other ports
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+    },
+});
 
 // Email template for certificate notification
 const getCertificateEmailTemplate = (studentName, certificateId, domain, startDate, endDate) => {
@@ -79,8 +77,6 @@ const getCertificateEmailTemplate = (studentName, certificateId, domain, startDa
 
 // Send single certificate email
 const sendCertificateEmail = async (studentEmail, studentName, certificateId, domain, startDate, endDate) => {
-    const transporter = createTransporter();
-    
     const mailOptions = {
         from: process.env.EMAIL_FROM,
         to: studentEmail,

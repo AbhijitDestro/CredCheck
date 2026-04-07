@@ -22,14 +22,12 @@ const uploadCertificates = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Excel file is empty' });
         }
         
-        const certificates = [];
+        const certDataToInsert = [];
         const errors = [];
-        let successCount = 0;
         
+        // 1. Process data and validate
         for (let i = 0; i < data.length; i++) {
             const row = data[i];
-            
-            // Validate required fields (Flexible keys)
             const studentName = row.studentName || row.StudentName || row.Name || row.name;
             const studentEmail = row.email || row.Email || row.studentEmail || row.StudentEmail || row.studentemail;
             const domain = row.internshipDomain || row.InternshipDomain || row.Domain || row.domain || row.Course || row.internshipdomain;
@@ -42,33 +40,18 @@ const uploadCertificates = async (req, res) => {
                 continue;
             }
             
-            // Generate ID if missing
             if (!certificateId) {
                 certificateId = `CERT-${Date.now()}-${Math.floor(Math.random() * 10000)}-${i}`.toUpperCase();
-            } else {
-                 // Check for duplicate certificate ID if provided
-                const existingCert = await Certificate.findOne({ 
-                    certificateId: certificateId.toString().toUpperCase() 
-                });
-                
-                if (existingCert) {
-                    errors.push(`Row ${i + 2}: Certificate ID ${certificateId} already exists`);
-                    continue;
-                }
             }
-            
-            // Parse dates
+
             let startDate = new Date();
             let endDate = new Date();
-            
             try {
                 if (startDateRaw) startDate = parseExcelDate(startDateRaw);
                 if (endDateRaw) endDate = parseExcelDate(endDateRaw);
-            } catch (dateError) {
-                // If dates are invalid, we default to today
-            }
-            
-            const newCert = new Certificate({
+            } catch (dateError) {}
+
+            certDataToInsert.push({
                 certificateId: certificateId.toString().toUpperCase(),
                 studentName: studentName.trim(),
                 studentEmail: studentEmail.trim().toLowerCase(),
@@ -77,39 +60,61 @@ const uploadCertificates = async (req, res) => {
                 endDate,
                 uploadedBy: req.user._id
             });
-            
-            await newCert.save();
-            certificates.push(newCert);
-            successCount++;
+        }
 
-            // Send Email
-            try {
-                const emailResult = await sendCertificateEmail(
-                    newCert.studentEmail,
-                    newCert.studentName,
-                    newCert.certificateId,
-                    newCert.domain,
-                    newCert.startDate,
-                    newCert.endDate
-                );
+        if (certDataToInsert.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'No valid certificates to upload',
+                errors: errors.length > 0 ? errors : null
+            });
+        }
 
-                if (emailResult.success) {
-                    newCert.emailSent = true;
-                    newCert.emailSentAt = Date.now();
-                    await newCert.save();
-                }
-            } catch (emailError) {
-                console.error(`Email failed for ${newCert.studentEmail}`);
+        // 2. Optimized Bulk Check for duplicates & Insert
+        let insertedCerts = [];
+        let partialSuccess = false;
+
+        try {
+            insertedCerts = await Certificate.insertMany(certDataToInsert, { ordered: false });
+        } catch (error) {
+            if (error.code === 11000 || (error.writeErrors && error.writeErrors.length > 0)) {
+                insertedCerts = error.insertedDocs || [];
+                partialSuccess = true;
+            } else {
+                throw error;
             }
         }
         
+        // 3. Trigger emails in background (non-blocking) for successfully inserted docs
+        insertedCerts.forEach(cert => {
+            sendCertificateEmail(
+                cert.studentEmail,
+                cert.studentName,
+                cert.certificateId,
+                cert.domain,
+                cert.startDate,
+                cert.endDate
+            ).then(async (emailResult) => {
+                if (emailResult.success) {
+                    await Certificate.findByIdAndUpdate(cert._id, {
+                        emailSent: true,
+                        emailSentAt: Date.now()
+                    });
+                }
+            }).catch(err => console.error(`Background email failed: ${cert.studentEmail}`, err.message));
+        });
+
+        const message = partialSuccess
+            ? `Uploaded ${insertedCerts.length} certificates. Some were skipped due to duplicates. Emails are being sent in the background.`
+            : `Successfully uploaded ${insertedCerts.length} certificates. Emails are being sent in the background.`;
+
         res.status(201).json({
             success: true,
-            message: `Successfully uploaded ${successCount} certificates`,
+            message,
             data: {
                 totalRows: data.length,
-                inserted: successCount,
-                errors: errors.length > 0 ? errors : null
+                inserted: insertedCerts.length,
+                errors: partialSuccess ? ["Duplicate certificate IDs found and skipped"] : (errors.length > 0 ? errors : null)
             }
         });
     } catch (error) {
@@ -264,29 +269,26 @@ const issueCertificate = async (req, res) => {
             uploadedBy: req.user._id
         });
 
-         // Send Email
-         try {
-            const emailResult = await sendCertificateEmail(
-                certificate.studentEmail,
-                certificate.studentName,
-                certificate.certificateId,
-                certificate.domain,
-                certificate.startDate,
-                certificate.endDate
-            );
-
+         // Send Email in background
+         sendCertificateEmail(
+            certificate.studentEmail,
+            certificate.studentName,
+            certificate.certificateId,
+            certificate.domain,
+            certificate.startDate,
+            certificate.endDate
+        ).then(async (emailResult) => {
             if (emailResult.success) {
-                certificate.emailSent = true;
-                certificate.emailSentAt = Date.now();
-                await certificate.save();
+                await Certificate.findByIdAndUpdate(certificate._id, {
+                    emailSent: true,
+                    emailSentAt: Date.now()
+                });
             }
-        } catch (emailError) {
-            console.error(`Email failed for ${certificate.studentEmail}`);
-        }
+        }).catch(err => console.error(`Background email failed: ${certificate.studentEmail}`, err.message));
 
         res.status(201).json({
             success: true,
-            message: 'Certificate issued and email sent successfully',
+            message: 'Certificate issue initiated. Email will be sent shortly.',
             data: certificate
         });
     } catch (error) {
