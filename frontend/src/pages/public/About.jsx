@@ -10,25 +10,29 @@ const About = () => {
       name: 'Dr. Sarah Johnson',
       role: 'CEO & Founder',
       description: 'Former university registrar with 15+ years in educational technology.',
-      color: 'from-blue-400 to-indigo-600'
+      color: 'from-blue-400 to-indigo-600',
+      image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=688&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
     },
     {
       name: 'Michael Chen',
       role: 'CTO',
       description: 'Blockchain expert and former lead developer at major tech companies.',
-      color: 'from-emerald-400 to-teal-600'
+      color: 'from-emerald-400 to-teal-600',
+      image: 'https://images.unsplash.com/photo-1534471770828-9bde524ee634?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
     },
     {
       name: 'Prof. David Williams',
       role: 'Chief Academic Officer',
       description: 'Former university president and education policy expert.',
-      color: 'from-orange-400 to-red-600'
+      color: 'from-orange-400 to-red-600',
+      image:'https://images.unsplash.com/photo-1548372290-8d01b6c8e78c?q=80&w=869&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
     },
     {
       name: 'Lisa Rodriguez',
       role: 'Head of Operations',
       description: 'Experienced operations leader with background in credential verification.',
-      color: 'from-purple-400 to-pink-600'
+      color: 'from-purple-400 to-pink-600',
+      image:'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
     }
   ]
 
@@ -242,7 +246,12 @@ const About = () => {
                 <div className="relative bg-white border border-gray-100 rounded-3xl p-8 text-center shadow-sm group-hover:shadow-xl transition-all duration-300">
                   <div className={`w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br ${member.color} p-1`}>
                     <div className="w-full h-full bg-white rounded-full flex items-center justify-center overflow-hidden">
-                      <User className="w-10 h-10 text-gray-300" />
+                      <img 
+                        src={member.image} 
+                        alt={member.name} 
+                        className="w-full h-full object-cover rounded-full"
+                        onError={(e) => e.target.style.display = 'none'} 
+                      />
                     </div>
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-1">{member.name}</h3>

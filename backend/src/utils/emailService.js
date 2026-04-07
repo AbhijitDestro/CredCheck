@@ -5,7 +5,7 @@ const createTransporter = () => {
     return nodemailer.createTransport({
         host: process.env.EMAIL_HOST,
         port: process.env.EMAIL_PORT,
-        secure: false,
+        secure: process.env.EMAIL_PORT == 465, // true for 465, false for other ports
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS,
@@ -15,7 +15,7 @@ const createTransporter = () => {
 
 // Email template for certificate notification
 const getCertificateEmailTemplate = (studentName, certificateId, domain, startDate, endDate) => {
-    const verificationLink = `${process.env.FRONTEND_URL}/certificate/${certificateId}`;
+    const verificationLink = `${process.env.FRONTEND_URL}/student/dashboard`;
     
     return `
     <!DOCTYPE html>
@@ -27,7 +27,7 @@ const getCertificateEmailTemplate = (studentName, certificateId, domain, startDa
             .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
             .content { background: #f9f9f9; padding: 30px; border: 1px solid #ddd; }
             .certificate-box { background: white; border: 2px solid #667eea; border-radius: 10px; padding: 20px; margin: 20px 0; }
-            .btn { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+            .btn { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #333; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
             .footer { background: #333; color: white; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; font-size: 12px; }
             .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
             .label { font-weight: bold; color: #666; }
@@ -37,11 +37,11 @@ const getCertificateEmailTemplate = (studentName, certificateId, domain, startDa
         <div class="container">
             <div class="header">
                 <h1>🎉 Congratulations!</h1>
-                <p>Your Internship Certificate is Ready</p>
+                <p>Your Certificate is Ready</p>
             </div>
             <div class="content">
                 <p>Dear <strong>${studentName}</strong>,</p>
-                <p>We are pleased to inform you that your internship certificate has been generated and is now available for download.</p>
+                <p>We are pleased to inform you that your certificate has been generated and is now available for download.</p>
                 
                 <div class="certificate-box">
                     <h3 style="color: #667eea; margin-top: 0;">Certificate Details</h3>

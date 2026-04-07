@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { 
   FileCheck, 
   Search, 
@@ -10,12 +10,11 @@ import {
   FolderOpen,
   ArrowRight,
   User,
-  Eye,
   Menu,
   X,
   XCircle
 } from 'lucide-react';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../../store/authStore';
 import { certificateAPI, authAPI } from '../../../services/api';
@@ -63,7 +62,6 @@ export default function StudentDashboard() {
 
   return (
     <div className="flex h-screen bg-[#fcfcfc] overflow-hidden font-sans">
-      <Toaster position="top-right" />
       
       {/* Profile Modal */}
       <AnimatePresence>

@@ -4,7 +4,7 @@ import Navbar from '../../components/public/Navbar'
 import Footer from '../../components/public/Footer'
 import { motion as Motion, AnimatePresence } from 'framer-motion'
 import { certificateAPI } from '../../services/api'
-import toast, { Toaster } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 
 const CertificateDownload = () => {
   const [certId, setCertId] = useState('')
@@ -63,7 +63,6 @@ const CertificateDownload = () => {
 
   return (
     <div className="min-h-screen bg-white font-sans selection:bg-red-100 selection:text-red-600">
-      <Toaster position="top-right" />
       <Navbar />
       
       <div className="relative pt-32 pb-20 px-4 min-h-screen flex flex-col justify-center overflow-hidden">

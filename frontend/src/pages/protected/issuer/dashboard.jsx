@@ -18,7 +18,7 @@ import {
   X,
   Menu
 } from 'lucide-react';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../../store/authStore';
 import { authAPI, issuerAPI } from '../../../services/api';
