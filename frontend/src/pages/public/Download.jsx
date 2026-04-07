@@ -57,6 +57,7 @@ const CertificateDownload = () => {
       
       toast.success('Downloaded successfully!', { id: toastId })
     } catch (err) {
+      console.error(err);
       toast.error('Failed to download certificate.')
     }
   }

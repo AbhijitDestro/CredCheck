@@ -202,8 +202,9 @@ function ProfileModal({ user, onClose, onUpdate }) {
       const response = await authAPI.updateProfile(formData);
       toast.success('Profile updated successfully');
       onUpdate(response.data.user);
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to update profile');
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Failed to update profile');
     } finally {
       setLoading(false);
     }
@@ -308,7 +309,8 @@ function MyCertificatesTab() {
       document.body.appendChild(link);
       link.click();
       link.remove();
-    } catch (error) {
+    } catch (err) {
+      console.error(err);
       toast.error('Failed to download certificate');
     }
   };
@@ -415,8 +417,9 @@ function FetchCertificateTab() {
       } else {
         toast.error(response.data.message || 'Certificate not found');
       }
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Certificate not found or server error');
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Certificate not found or server error');
     } finally {
       setIsLoading(false);
     }
@@ -433,7 +436,8 @@ function FetchCertificateTab() {
       document.body.appendChild(link);
       link.click();
       link.remove();
-    } catch (error) {
+    } catch (err) {
+      console.error(err);
       toast.error('Failed to download certificate');
     }
   };
