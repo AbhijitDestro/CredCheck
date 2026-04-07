@@ -22,9 +22,25 @@ const uploadCertificates = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Excel file is empty' });
         }
         
-        const certificates = [];
+        const certificatesToInsert = [];
         const errors = [];
         let successCount = 0;
+        
+        // Collect all explicitly provided certificate IDs for bulk duplicate check
+        const providedIds = [];
+        data.forEach(row => {
+            const certId = row.certificateId || row.CertificateId || row.ID;
+            if (certId) {
+                providedIds.push(certId.toString().toUpperCase());
+            }
+        });
+
+        // Find existing certificates in one query
+        const existingCertificates = await Certificate.find({ 
+            certificateId: { $in: providedIds } 
+        }).select('certificateId');
+        
+        const existingIdsSet = new Set(existingCertificates.map(c => c.certificateId));
         
         for (let i = 0; i < data.length; i++) {
             const row = data[i];
@@ -46,15 +62,13 @@ const uploadCertificates = async (req, res) => {
             if (!certificateId) {
                 certificateId = `CERT-${Date.now()}-${Math.floor(Math.random() * 10000)}-${i}`.toUpperCase();
             } else {
-                 // Check for duplicate certificate ID if provided
-                const existingCert = await Certificate.findOne({ 
-                    certificateId: certificateId.toString().toUpperCase() 
-                });
-                
-                if (existingCert) {
+                 // Check for duplicate certificate ID from our pre-fetched set
+                if (existingIdsSet.has(certificateId.toString().toUpperCase())) {
                     errors.push(`Row ${i + 2}: Certificate ID ${certificateId} already exists`);
                     continue;
                 }
+                // Add to set to prevent duplicates within the same Excel file
+                existingIdsSet.add(certificateId.toString().toUpperCase());
             }
             
             // Parse dates
@@ -68,7 +82,7 @@ const uploadCertificates = async (req, res) => {
                 // If dates are invalid, we default to today
             }
             
-            const newCert = new Certificate({
+            certificatesToInsert.push({
                 certificateId: certificateId.toString().toUpperCase(),
                 studentName: studentName.trim(),
                 studentEmail: studentEmail.trim().toLowerCase(),
@@ -77,30 +91,33 @@ const uploadCertificates = async (req, res) => {
                 endDate,
                 uploadedBy: req.user._id
             });
+        }
+        
+        // Bulk insert valid certificates
+        if (certificatesToInsert.length > 0) {
+            const insertedCerts = await Certificate.insertMany(certificatesToInsert);
+            successCount = insertedCerts.length;
             
-            await newCert.save();
-            certificates.push(newCert);
-            successCount++;
-
-            // Send Email
-            try {
-                const emailResult = await sendCertificateEmail(
-                    newCert.studentEmail,
-                    newCert.studentName,
-                    newCert.certificateId,
-                    newCert.domain,
-                    newCert.startDate,
-                    newCert.endDate
-                );
-
-                if (emailResult.success) {
-                    newCert.emailSent = true;
-                    newCert.emailSentAt = Date.now();
-                    await newCert.save();
-                }
-            } catch (emailError) {
-                console.error(`Email failed for ${newCert.studentEmail}`);
-            }
+            // Process emails asynchronously in the background
+            insertedCerts.forEach(cert => {
+                sendCertificateEmail(
+                    cert.studentEmail,
+                    cert.studentName,
+                    cert.certificateId,
+                    cert.domain,
+                    cert.startDate,
+                    cert.endDate
+                ).then(async (emailResult) => {
+                    if (emailResult && emailResult.success) {
+                        await Certificate.updateOne(
+                            { _id: cert._id },
+                            { $set: { emailSent: true, emailSentAt: Date.now() } }
+                        );
+                    }
+                }).catch(emailError => {
+                    console.error(`Email failed for ${cert.studentEmail}:`, emailError);
+                });
+            });
         }
         
         res.status(201).json({
@@ -264,29 +281,28 @@ const issueCertificate = async (req, res) => {
             uploadedBy: req.user._id
         });
 
-         // Send Email
-         try {
-            const emailResult = await sendCertificateEmail(
-                certificate.studentEmail,
-                certificate.studentName,
-                certificate.certificateId,
-                certificate.domain,
-                certificate.startDate,
-                certificate.endDate
-            );
-
-            if (emailResult.success) {
-                certificate.emailSent = true;
-                certificate.emailSentAt = Date.now();
-                await certificate.save();
+        // Send Email Asynchronously
+        sendCertificateEmail(
+            certificate.studentEmail,
+            certificate.studentName,
+            certificate.certificateId,
+            certificate.domain,
+            certificate.startDate,
+            certificate.endDate
+        ).then(async (emailResult) => {
+            if (emailResult && emailResult.success) {
+                await Certificate.updateOne(
+                    { _id: certificate._id },
+                    { $set: { emailSent: true, emailSentAt: Date.now() } }
+                );
             }
-        } catch (emailError) {
-            console.error(`Email failed for ${certificate.studentEmail}`);
-        }
+        }).catch(emailError => {
+            console.error(`Email failed for ${certificate.studentEmail}:`, emailError);
+        });
 
         res.status(201).json({
             success: true,
-            message: 'Certificate issued and email sent successfully',
+            message: 'Certificate issued successfully (email sending in background)',
             data: certificate
         });
     } catch (error) {
